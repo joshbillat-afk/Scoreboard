@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Scoreboard">
+    <link rel="manifest" href="manifest.json">
+    <title>Daily Scoreboard</title>
+    <style>
+        :root {
+            --bg-color: #111111;
+            --surface: #222222;
+            --player: #4ade80; /* Athletic Green */
+            --day: #f87171;    /* Alert Red */
+            --text: #ffffff;
+            --muted: #888888;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; padding: 20px; padding-top: 60px; /* Safe area for iOS notch */ user-select: none; }
+        
+        /* Header */
+        .header { text-align: center; margin-bottom: 30px; }
+        .quarter-badge { display: inline-block; background: var(--surface); padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 14px; letter-spacing: 1px; color: var(--muted); }
+        
+        /* Scoreboard */
+        .scoreboard { display: flex; justify-content: space-between; align-items: center; background: var(--surface); border-radius: 24px; padding: 30px 20px; margin-bottom: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .team { display: flex; flex-direction: column; align-items: center; width: 40%; }
+        .team-name { font-size: 16px; font-weight: 800; letter-spacing: 2px; margin-bottom: 10px; }
+        .you-name { color: var(--player); }
+        .day-name { color: var(--day); }
+        .score { font-size: 72px; font-weight: 900; line-height: 1; }
+        .divider { font-size: 48px; color: var(--muted); font-weight: 300; }
+
+        /* Buttons */
+        .controls { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 50px; }
+        .btn { flex: 1; padding: 25px 10px; border: none; border-radius: 16px; font-size: 20px; font-weight: 800; color: #000; cursor: pointer; transition: transform 0.1s; }
+        .btn:active { transform: scale(0.96); }
+        .btn-you { background-color: var(--player); }
+        .btn-day { background-color: var(--day); }
+
+        /* Weekly Progress */
+        .weekly-section { margin-top: auto; padding-bottom: 30px; }
+        .section-title { font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; text-align: center; }
+        .week-grid { display: flex; justify-content: space-between; gap: 8px; }
+        .day-card { flex: 1; background: var(--surface); border-radius: 12px; padding: 15px 0; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .day-label { font-size: 12px; font-weight: 700; color: var(--muted); }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; background: #333; }
+        
+        /* Dynamic Status Classes */
+        .dot-win { background-color: var(--player); box-shadow: 0 0 10px rgba(74, 222, 128, 0.5); }
+        .dot-loss { background-color: var(--day); box-shadow: 0 0 10px rgba(248, 113, 113, 0.5); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="quarter-badge" id="quarter-display">LOADING...</div>
+    </div>
+
+    <div class="scoreboard">
+        <div class="team">
+            <div class="team-name you-name">YOU</div>
+            <div class="score" id="score-you">0</div>
+        </div>
+        <div class="divider">-</div>
+        <div class="team">
+            <div class="team-name day-name">THE DAY</div>
+            <div class="score" id="score-day">0</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-you" onclick="addPoint('you')">+1 YOU</button>
+        <button class="btn btn-day" onclick="addPoint('day')">+1 DAY</button>
+    </div>
+
+    <div class="weekly-section">
+        <div class="section-title">This Week's Series</div>
+        <div class="week-grid" id="week-grid">
+            </div>
+    </div>
+
+    <script>
+        // --- Data Logic ---
+        let data = JSON.parse(localStorage.getItem('scoreboardData')) || {
+            date: new Date().toDateString(),
+            you: 0,
+            day: 0,
+            history: [0,0,0,0,0,0,0] // 0: unplayed, 1: win, -1: loss (Mon-Sun)
+        };
+
+        // Check for new day reset
+        const todayStr = new Date().toDateString();
+        if (data.date !== todayStr) {
+            // Save yesterday's result based on current day of week (0 = Sun, 1 = Mon)
+            let yesterdayDate = new Date(data.date);
+            let dayIndex = yesterdayDate.getDay() === 0 ? 6 : yesterdayDate.getDay() - 1; 
+            
+            if (data.you > data.day) data.history[dayIndex] = 1;
+            else if (data.day > data.you) data.history[dayIndex] = -1;
+
+            // Reset for today
+            data.date = todayStr;
+            data.you = 0;
+            data.day = 0;
+            
+            // If it's Monday, reset the whole week history
+            if (new Date().getDay() === 1) {
+                data.history = [0,0,0,0,0,0,0];
+            }
+            saveData();
+        }
+
+        function saveData() {
+            localStorage.setItem('scoreboardData', JSON.stringify(data));
+            updateUI();
+        }
+
+        // --- Interaction Logic ---
+        function addPoint(team) {
+            if (team === 'you') data.you++;
+            if (team === 'day') data.day++;
+            saveData();
+        }
+
+        // --- UI Rendering ---
+        function updateUI() {
+            // Update Scores
+            document.getElementById('score-you').innerText = data.you;
+            document.getElementById('score-day').innerText = data.day;
+
+            // Update Quarter based on 8AM start
+            const hour = new Date().getHours();
+            let qText = "POSTGAME";
+            if (hour >= 8 && hour < 12) qText = "1ST QUARTER";
+            else if (hour >= 12 && hour < 16) qText = "2ND QUARTER";
+            else if (hour >= 16 && hour < 20) qText = "3RD QUARTER";
+            else if (hour >= 20 && hour < 24) qText = "4TH QUARTER";
+            else if (hour >= 0 && hour < 8) qText = "PREGAME";
+            document.getElementById('quarter-display').innerText = qText;
+
+            // Render Weekly Grid
+            const grid = document.getElementById('week-grid');
+            grid.innerHTML = '';
+            const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+            let currentDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+
+            days.forEach((label, index) => {
+                let statusClass = '';
+                
+                // Historical days
+                if (index < currentDayIndex) {
+                    if (data.history[index] === 1) statusClass = 'dot-win';
+                    if (data.history[index] === -1) statusClass = 'dot-loss';
+                } 
+                // Current day (live projection)
+                else if (index === currentDayIndex) {
+                    if (data.you > data.day) statusClass = 'dot-win';
+                    else if (data.day > data.you) statusClass = 'dot-loss';
+                }
+
+                grid.innerHTML += `
+                    <div class="day-card">
+                        <div class="day-label">${label}</div>
+                        <div class="status-dot ${statusClass}"></div>
+                    </div>
+                `;
+            });
+        }
+
+        // Initialize
+        updateUI();
+        // Update quarter display every minute just in case the app is left open
+        setInterval(updateUI, 60000); 
+    </script>
+</body>
+</html>

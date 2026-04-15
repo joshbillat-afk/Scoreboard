@@ -18,126 +18,252 @@
             --muted: #666666;
             --glow-player: rgba(74, 222, 128, 0.6);
             --glow-day: rgba(248, 113, 113, 0.6);
+            --edit-mode: #eab308; /* Gold for editing mode */
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; padding: 20px; padding-top: 60px; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-color); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; padding: 15px; padding-top: 50px; user-select: none; -webkit-tap-highlight-color: transparent; }
         
-        /* Header */
-        .header { text-align: center; margin-bottom: 30px; }
-        .quarter-badge { display: inline-block; background: var(--surface); padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 14px; letter-spacing: 2px; color: #aaaaaa; border: 1px solid #333; }
+        /* Series Status Header */
+        .series-status-container { text-align: center; margin-bottom: 15px; }
+        .series-status-text { font-size: 15px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
         
-        /* Scoreboard */
+        /* Box Score Table */
+        .box-score-container { background: var(--surface); border-radius: 12px; padding: 10px; margin-bottom: 20px; border: 1px solid #333; }
+        .box-score { width: 100%; border-collapse: collapse; text-align: center; font-size: 13px; font-weight: 700; }
+        .box-score th { color: var(--muted); padding-bottom: 8px; border-bottom: 1px solid #333; }
+        .box-score td { padding: 8px 0; }
+        .box-score .team-col { text-align: left; padding-left: 10px; width: 25%; font-weight: 900; letter-spacing: 1px; }
+        .box-score .tot-col { font-weight: 900; color: #fff; background: rgba(255,255,255,0.05); border-radius: 4px; }
+        .row-you .team-col { color: var(--player); }
+        .row-day .team-col { color: var(--day); }
+
+        /* Jumbotron (Total Score) */
         .scoreboard { 
             display: flex; justify-content: space-between; align-items: center; 
-            background: var(--surface); border-radius: 24px; padding: 30px 20px; 
-            margin-bottom: 40px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            border: 2px solid #333;
-            transition: border-color 0.4s ease, box-shadow 0.4s ease;
+            background: var(--surface); border-radius: 20px; padding: 20px; 
+            margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            border: 2px solid #333; transition: border-color 0.4s ease, box-shadow 0.4s ease;
         }
-        /* Dynamic Momentum Borders */
         .scoreboard.winning { border-color: var(--player); box-shadow: 0 0 20px var(--glow-player); }
         .scoreboard.losing { border-color: var(--day); box-shadow: 0 0 20px var(--glow-day); }
+        .scoreboard.history-mode { border-color: #555; box-shadow: none; opacity: 0.8; }
 
         .team { display: flex; flex-direction: column; align-items: center; width: 40%; }
-        .team-name { font-size: 14px; font-weight: 800; letter-spacing: 3px; margin-bottom: 10px; opacity: 0.9; }
-        .you-name { color: var(--player); }
-        .day-name { color: var(--day); }
-        
-        /* Glowing LED Scores */
-        .score { 
-            font-size: 80px; font-weight: 900; line-height: 1; 
-            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+        .score { font-size: 65px; font-weight: 900; line-height: 1; transition: transform 0.1s; }
         .score-you-text { color: #fff; text-shadow: 0 0 15px var(--glow-player); }
         .score-day-text { color: #fff; text-shadow: 0 0 15px var(--glow-day); }
-        
-        /* Pop Animation */
         .score.pop { transform: scale(1.3); }
+        .divider { font-size: 30px; color: var(--muted); font-weight: 300; }
+        .total-label { font-size: 11px; font-weight: 800; color: var(--muted); letter-spacing: 2px; position: absolute; margin-top: -15px; }
 
-        .divider { font-size: 40px; color: var(--muted); font-weight: 300; }
+        /* Quarter Selector (Editor) */
+        .editor-section { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+        .editor-status { font-size: 11px; font-weight: 800; text-align: center; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; height: 14px; }
+        .editor-status.is-editing { color: var(--edit-mode); }
+        
+        .q-tabs { display: flex; background: var(--surface); border-radius: 12px; padding: 4px; border: 1px solid #333; }
+        .q-tab { 
+            flex: 1; padding: 10px 0; text-align: center; color: var(--muted); 
+            font-size: 13px; font-weight: 800; border-radius: 8px; 
+            transition: all 0.2s; cursor: pointer;
+        }
+        .q-tab.active { background: #333; color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .q-tab.active.editing { background: var(--edit-mode); color: #000; }
 
-        /* 3D Tactile Buttons */
-        .controls { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 50px; }
+        /* Controls */
+        .controls { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 25px; min-height: 60px; }
         .btn { 
-            flex: 1; padding: 20px 10px; border: none; border-radius: 16px; 
-            font-size: 18px; font-weight: 900; letter-spacing: 1px; color: #000; 
-            cursor: pointer; transition: all 0.1s;
-            position: relative; top: 0;
+            flex: 1; padding: 18px 10px; border: none; border-radius: 14px; 
+            font-size: 16px; font-weight: 900; letter-spacing: 1px; color: #000; 
+            cursor: pointer; transition: all 0.1s; position: relative; top: 0;
         }
         .btn-you { background-color: var(--player); box-shadow: 0 6px 0 #166534; }
         .btn-you:active { top: 6px; box-shadow: 0 0px 0 #166534; }
-        
         .btn-day { background-color: var(--day); box-shadow: 0 6px 0 #991b1b; }
         .btn-day:active { top: 6px; box-shadow: 0 0px 0 #991b1b; }
+        .btn-back { background-color: #333; color: #fff; box-shadow: 0 6px 0 #111; width: 100%; display: none; }
+        .btn-back:active { top: 6px; box-shadow: 0 0px 0 #111; }
 
         /* Weekly Progress */
-        .weekly-section { margin-top: auto; padding-bottom: 30px; }
-        .section-title { font-size: 13px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; text-align: center; }
-        .week-grid { display: flex; justify-content: space-between; gap: 8px; }
-        .day-card { flex: 1; background: var(--surface); border-radius: 12px; padding: 12px 0; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; border: 1px solid #222; }
-        .day-label { font-size: 12px; font-weight: 800; color: var(--muted); }
-        .status-dot { width: 14px; height: 14px; border-radius: 50%; background: #333; transition: all 0.3s ease; }
-        
-        .dot-win { background-color: var(--player); box-shadow: 0 0 10px var(--glow-player); }
-        .dot-loss { background-color: var(--day); box-shadow: 0 0 10px var(--glow-day); }
+        .weekly-section { margin-top: auto; padding-bottom: 20px; }
+        .section-title { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; text-align: center; }
+        .week-grid { display: flex; justify-content: space-between; gap: 6px; }
+        .day-card { 
+            flex: 1; background: var(--surface); border-radius: 10px; padding: 10px 0; 
+            text-align: center; display: flex; flex-direction: column; align-items: center; 
+            gap: 6px; border: 1px solid #222; cursor: pointer; transition: background 0.2s;
+        }
+        .day-card.active-view { background: #333; border-color: #666; }
+        .day-label { font-size: 11px; font-weight: 800; color: var(--muted); }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; background: #222; transition: all 0.3s ease; }
+        .dot-win { background-color: var(--player); box-shadow: 0 0 8px var(--glow-player); }
+        .dot-loss { background-color: var(--day); box-shadow: 0 0 8px var(--glow-day); }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="quarter-badge" id="quarter-display">LOADING...</div>
+    <div class="series-status-container">
+        <div class="series-status-text" id="series-title">LOADING SERIES...</div>
     </div>
 
+    <div class="box-score-container">
+        <table class="box-score">
+            <thead>
+                <tr>
+                    <th class="team-col">TEAM</th>
+                    <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th>
+                    <th class="tot-col">TOT</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="row-you">
+                    <td class="team-col">YOU</td>
+                    <td id="bs-y-q1">0</td><td id="bs-y-q2">0</td><td id="bs-y-q3">0</td><td id="bs-y-q4">0</td>
+                    <td class="tot-col" id="bs-y-tot">0</td>
+                </tr>
+                <tr class="row-day">
+                    <td class="team-col">DAY</td>
+                    <td id="bs-d-q1">0</td><td id="bs-d-q2">0</td><td id="bs-d-q3">0</td><td id="bs-d-q4">0</td>
+                    <td class="tot-col" id="bs-d-tot">0</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div style="display: flex; justify-content: center;"><div class="total-label">TOTAL SCORE</div></div>
     <div class="scoreboard" id="main-scoreboard">
         <div class="team">
-            <div class="team-name you-name">YOU</div>
             <div class="score score-you-text" id="score-you">0</div>
         </div>
-        <div class="divider">-</div>
+        <div class="divider" id="score-divider">-</div>
         <div class="team">
-            <div class="team-name day-name">THE DAY</div>
             <div class="score score-day-text" id="score-day">0</div>
         </div>
     </div>
 
-    <div class="controls">
-        <button class="btn btn-you" onclick="addPoint('you')">+1 YOU</button>
-        <button class="btn btn-day" onclick="addPoint('day')">+1 DAY</button>
+    <div class="editor-section" id="editor-section">
+        <div class="editor-status" id="editor-status">LIVE</div>
+        <div class="q-tabs">
+            <div class="q-tab" id="tab-q1" onclick="selectQuarter('Q1')">Q1</div>
+            <div class="q-tab" id="tab-q2" onclick="selectQuarter('Q2')">Q2</div>
+            <div class="q-tab" id="tab-q3" onclick="selectQuarter('Q3')">Q3</div>
+            <div class="q-tab" id="tab-q4" onclick="selectQuarter('Q4')">Q4</div>
+        </div>
+    </div>
+
+    <div class="controls" id="action-controls">
+        <button class="btn btn-you" id="btn-add-you" onclick="addPoint('you')">+1 YOU</button>
+        <button class="btn btn-day" id="btn-add-day" onclick="addPoint('day')">+1 DAY</button>
+        <button class="btn btn-back" id="btn-back" onclick="viewToday()">BACK TO TODAY</button>
     </div>
 
     <div class="weekly-section">
         <div class="section-title">SERIES TRACKER</div>
-        <div class="week-grid" id="week-grid">
-            </div>
+        <div class="week-grid" id="week-grid"></div>
     </div>
 
     <script>
-        let data = JSON.parse(localStorage.getItem('scoreboardData')) || {
-            date: new Date().toDateString(),
-            you: 0,
-            day: 0,
-            history: [0,0,0,0,0,0,0] 
-        };
+        // --- Core Logic & Data Migration (V3) ---
+        function getRealClockQuarter() {
+            const hour = new Date().getHours();
+            if (hour >= 8 && hour < 12) return 'Q1';
+            if (hour >= 12 && hour < 16) return 'Q2';
+            if (hour >= 16 && hour < 20) return 'Q3';
+            if (hour >= 20 && hour < 24) return 'Q4';
+            return 'Q4'; // Default to late night Postgame in Q4 for simplicity
+        }
 
+        function createEmptyDay() {
+            return { Q1: {y:0, d:0}, Q2: {y:0, d:0}, Q3: {y:0, d:0}, Q4: {y:0, d:0} };
+        }
+
+        let rawData = localStorage.getItem('scoreboardDataV3');
+        let data;
+        
+        if (rawData) {
+            data = JSON.parse(rawData);
+        } else {
+            // Upgrade from V2 to V3
+            data = {
+                date: new Date().toDateString(),
+                todayQuarters: createEmptyDay(),
+                historyScores: Array(7).fill(null) // null or complex object
+            };
+            
+            // Salvage old data
+            let oldDataV2 = JSON.parse(localStorage.getItem('scoreboardDataV2'));
+            if (oldDataV2) {
+                // Dump today's V2 total into the current quarter so we don't lose them
+                const currQ = getRealClockQuarter();
+                data.todayQuarters[currQ].y = oldDataV2.you || 0;
+                data.todayQuarters[currQ].d = oldDataV2.day || 0;
+                
+                // Migrate history scores into dummy Q1 box scores to preserve the Series Tracker
+                if (oldDataV2.historyScores) {
+                    for (let i=0; i<7; i++) {
+                        if (oldDataV2.historyScores[i]) {
+                            data.historyScores[i] = createEmptyDay();
+                            data.historyScores[i].Q1.y = oldDataV2.historyScores[i].you;
+                            data.historyScores[i].Q1.d = oldDataV2.historyScores[i].day;
+                        }
+                    }
+                }
+            }
+            localStorage.setItem('scoreboardDataV3', JSON.stringify(data));
+        }
+
+        // Handle Midnight Rollover
         const todayStr = new Date().toDateString();
         if (data.date !== todayStr) {
             let yesterdayDate = new Date(data.date);
             let dayIndex = yesterdayDate.getDay() === 0 ? 6 : yesterdayDate.getDay() - 1; 
             
-            if (data.you > data.day) data.history[dayIndex] = 1;
-            else if (data.day > data.you) data.history[dayIndex] = -1;
+            // Freeze yesterday's quarters into history
+            data.historyScores[dayIndex] = JSON.parse(JSON.stringify(data.todayQuarters));
 
+            // Reset for today
             data.date = todayStr;
-            data.you = 0;
-            data.day = 0;
+            data.todayQuarters = createEmptyDay();
             
-            if (new Date().getDay() === 1) data.history = [0,0,0,0,0,0,0];
+            if (new Date().getDay() === 1) data.historyScores = Array(7).fill(null);
             saveData();
         }
 
+        // --- App State ---
+        let viewingHistoryIndex = -1; // -1 = Today
+        let activeEditorQuarter = getRealClockQuarter(); // Which tab is selected
+
         function saveData() {
-            localStorage.setItem('scoreboardData', JSON.stringify(data));
+            localStorage.setItem('scoreboardDataV3', JSON.stringify(data));
+            updateUI();
+        }
+
+        // Calculate total for a specific day object
+        function getTotals(dayObj) {
+            if (!dayObj) return {y:0, d:0};
+            return {
+                y: dayObj.Q1.y + dayObj.Q2.y + dayObj.Q3.y + dayObj.Q4.y,
+                d: dayObj.Q1.d + dayObj.Q2.d + dayObj.Q3.d + dayObj.Q4.d
+            };
+        }
+
+        function addPoint(team) {
+            if (viewingHistoryIndex !== -1) return; // Locked in history mode
+            
+            if (team === 'you') {
+                data.todayQuarters[activeEditorQuarter].y++;
+                triggerPopAnimation('score-you');
+            }
+            if (team === 'day') {
+                data.todayQuarters[activeEditorQuarter].d++;
+                triggerPopAnimation('score-day');
+            }
+            saveData();
+        }
+
+        function selectQuarter(q) {
+            if (viewingHistoryIndex !== -1) return; // Disabled in history mode
+            activeEditorQuarter = q;
             updateUI();
         }
 
@@ -147,60 +273,127 @@
             setTimeout(() => el.classList.remove('pop'), 150);
         }
 
-        function addPoint(team) {
-            if (team === 'you') {
-                data.you++;
-                triggerPopAnimation('score-you');
+        function viewHistory(index) {
+            let currentDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+            if (index >= currentDayIndex) { viewToday(); return; }
+            if (data.historyScores[index] !== null) {
+                viewingHistoryIndex = index;
+                updateUI();
             }
-            if (team === 'day') {
-                data.day++;
-                triggerPopAnimation('score-day');
-            }
-            saveData();
         }
 
-        function updateUI() {
-            document.getElementById('score-you').innerText = data.you;
-            document.getElementById('score-day').innerText = data.day;
+        function viewToday() {
+            viewingHistoryIndex = -1;
+            activeEditorQuarter = getRealClockQuarter(); // Reset selector to now
+            updateUI();
+        }
 
-            // Momentum Styling
+        // --- UI Rendering ---
+        function updateUI() {
+            const isHistoryMode = viewingHistoryIndex !== -1;
+            const activeDayObj = isHistoryMode ? data.historyScores[viewingHistoryIndex] : data.todayQuarters;
+            const totals = getTotals(activeDayObj);
+            const realTimeQ = getRealClockQuarter();
+
+            // 1. Update Box Score Table
+            ['Q1', 'Q2', 'Q3', 'Q4'].forEach(q => {
+                document.getElementById(`bs-y-${q.toLowerCase()}`).innerText = activeDayObj[q].y;
+                document.getElementById(`bs-d-${q.toLowerCase()}`).innerText = activeDayObj[q].d;
+            });
+            document.getElementById('bs-y-tot').innerText = totals.y;
+            document.getElementById('bs-d-tot').innerText = totals.d;
+
+            // 2. Update Jumbotron
+            document.getElementById('score-you').innerText = totals.y;
+            document.getElementById('score-day').innerText = totals.d;
+
+            // 3. Update Series Title
+            let currentDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+            let wins = 0; let losses = 0;
+            
+            for (let i = 0; i < currentDayIndex; i++) {
+                let pastTotal = getTotals(data.historyScores[i]);
+                if (data.historyScores[i]) {
+                    if (pastTotal.y > pastTotal.d) wins++;
+                    else if (pastTotal.d > pastTotal.y) losses++;
+                }
+            }
+            
+            let todayTotal = getTotals(data.todayQuarters);
+            if (todayTotal.y > todayTotal.d) wins++;
+            else if (todayTotal.d > todayTotal.y) losses++;
+
+            let seriesText = `SERIES TIED, ${wins}-${losses}`;
+            if (wins > losses) seriesText = `YOU LEAD SERIES, ${wins}-${losses}`;
+            else if (losses > wins) seriesText = `THE DAY LEADS, ${losses}-${wins}`;
+            if (isHistoryMode) seriesText = "VIEWING PAST BOX SCORE";
+            document.getElementById('series-title').innerText = seriesText;
+
+            // 4. Update Modes, Momentum & Editor
+            const btnYou = document.getElementById('btn-add-you');
+            const btnDay = document.getElementById('btn-add-day');
+            const btnBack = document.getElementById('btn-back');
             const board = document.getElementById('main-scoreboard');
-            if (data.you > data.day) {
-                board.className = 'scoreboard winning';
-            } else if (data.day > data.you) {
-                board.className = 'scoreboard losing';
+            const editorSec = document.getElementById('editor-section');
+            const edStatus = document.getElementById('editor-status');
+
+            if (isHistoryMode) {
+                btnYou.style.display = 'none'; btnDay.style.display = 'none'; btnBack.style.display = 'block';
+                editorSec.style.display = 'none'; // Hide editor in history mode
+                board.className = 'scoreboard history-mode';
             } else {
-                board.className = 'scoreboard';
+                btnYou.style.display = 'block'; btnDay.style.display = 'block'; btnBack.style.display = 'none';
+                editorSec.style.display = 'flex';
+                
+                // Momentum based on TOTAL score
+                if (totals.y > totals.d) board.className = 'scoreboard winning';
+                else if (totals.d > totals.y) board.className = 'scoreboard losing';
+                else board.className = 'scoreboard';
+
+                // Update Quarter Selector UI
+                ['Q1', 'Q2', 'Q3', 'Q4'].forEach(q => {
+                    const tab = document.getElementById(`tab-${q.toLowerCase()}`);
+                    tab.className = 'q-tab'; // reset
+                    if (q === activeEditorQuarter) {
+                        tab.classList.add('active');
+                        if (q !== realTimeQ) tab.classList.add('editing');
+                    }
+                });
+
+                if (activeEditorQuarter !== realTimeQ) {
+                    edStatus.innerText = `EDITING PAST QUARTER (${activeEditorQuarter})`;
+                    edStatus.className = 'editor-status is-editing';
+                } else {
+                    edStatus.innerText = `LIVE CLOCK: ${realTimeQ}`;
+                    edStatus.className = 'editor-status';
+                }
             }
 
-            // Quarter Logic
-            const hour = new Date().getHours();
-            let qText = "POSTGAME";
-            if (hour >= 8 && hour < 12) qText = "1ST QUARTER";
-            else if (hour >= 12 && hour < 16) qText = "2ND QUARTER";
-            else if (hour >= 16 && hour < 20) qText = "3RD QUARTER";
-            else if (hour >= 20 && hour < 24) qText = "4TH QUARTER";
-            else if (hour >= 0 && hour < 8) qText = "PREGAME";
-            document.getElementById('quarter-display').innerText = qText;
-
-            // Weekly Grid
+            // 5. Update Weekly Grid
             const grid = document.getElementById('week-grid');
             grid.innerHTML = '';
             const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-            let currentDayIndex = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
 
             days.forEach((label, index) => {
-                let statusClass = '';
+                let statusClass = ''; let isClickable = false;
+
                 if (index < currentDayIndex) {
-                    if (data.history[index] === 1) statusClass = 'dot-win';
-                    if (data.history[index] === -1) statusClass = 'dot-loss';
+                    if (data.historyScores[index]) {
+                        isClickable = true;
+                        let pastTotal = getTotals(data.historyScores[index]);
+                        if (pastTotal.y > pastTotal.d) statusClass = 'dot-win';
+                        else if (pastTotal.d > pastTotal.y) statusClass = 'dot-loss';
+                    }
                 } else if (index === currentDayIndex) {
-                    if (data.you > data.day) statusClass = 'dot-win';
-                    else if (data.day > data.you) statusClass = 'dot-loss';
+                    if (todayTotal.y > todayTotal.d) statusClass = 'dot-win';
+                    else if (todayTotal.d > todayTotal.y) statusClass = 'dot-loss';
                 }
 
+                let activeClass = (viewingHistoryIndex === index) ? 'active-view' : '';
+                let cursorStyle = isClickable ? 'cursor: pointer;' : 'cursor: default; opacity: 0.5;';
+
                 grid.innerHTML += `
-                    <div class="day-card">
+                    <div class="day-card ${activeClass}" style="${cursorStyle}" onclick="viewHistory(${index})">
                         <div class="day-label">${label}</div>
                         <div class="status-dot ${statusClass}"></div>
                     </div>
@@ -208,8 +401,9 @@
             });
         }
 
+        // Run
         updateUI();
-        setInterval(updateUI, 60000); 
+        setInterval(() => { if (viewingHistoryIndex === -1 && activeEditorQuarter === getRealClockQuarter()) updateUI(); }, 60000); 
     </script>
 </body>
 </html>
